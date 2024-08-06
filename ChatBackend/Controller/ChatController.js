@@ -35,7 +35,6 @@ const sendMessage = async (req, res) => {
 const getMessage = async (req, res) => {
   try {
     const { sender, receiver } = req.query;
-    console.log(sender, receiver);
 
     const messages = await Chat.find({
       $or: [
@@ -44,9 +43,7 @@ const getMessage = async (req, res) => {
       ],
     }).sort({ createdAt: 1 });
 
-    console.log(messages);
-
-    res.status(200).json({ message: "Previous Message", data: { messages } });
+    res.status(200).json({ message: "Previous Message", data: messages });
   } catch (error) {
     console.error("Error fetching messages:", error);
     res.status(500).json({ message: "Internal server error" });

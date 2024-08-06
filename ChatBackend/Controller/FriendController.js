@@ -1,11 +1,46 @@
 const { User } = require("../Model/Model");
 const mongoose = require("mongoose");
 
+function toObjectId(id) {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return new mongoose.Types.ObjectId(id);
+  }
+  return null;
+}
+
+const getFriend = async (req, res) => {
+  const { friendId } = req.params;
+
+  const friendObjectId = toObjectId(friendId);
+  try {
+    if (!friendObjectId) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const friend = await User.findById(friendObjectId);
+
+    if (!friend) {
+      return res.status(404).json({ message: "Friend not found" });
+    }
+
+    return res.status(200).json({ message: "One Friend", data: friend });
+  } catch (error) {
+    console.error("Error fetching friends:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Show People
 const showPeople = async (req, res) => {
   const { userId } = req.query;
+  const userObjectId = toObjectId(userId);
 
   try {
-    const user = await User.findById(userId);
+    if (!userObjectId) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(userObjectId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -22,20 +57,21 @@ const showPeople = async (req, res) => {
   }
 };
 
+// Add Friend
 const AddFriend = async (req, res) => {
   const { requester, accepter } = req.body;
-  //requester main user
-  //accepter from home
+  const requesterObjectId = toObjectId(requester);
+  const accepterObjectId = toObjectId(accepter);
 
   try {
-    if (!isValidObjectId(requester) || !isValidObjectId(accepter)) {
+    if (!requesterObjectId || !accepterObjectId) {
       return res
         .status(400)
         .json({ message: "Invalid requester or accepter ID" });
     }
 
-    const requestUser = await User.findById(requester); // main user
-    const acceptUser = await User.findById(accepter);
+    const requestUser = await User.findById(requesterObjectId);
+    const acceptUser = await User.findById(accepterObjectId);
 
     if (!acceptUser) {
       return res.status(404).json({ message: "User Not Found" });
@@ -51,21 +87,19 @@ const AddFriend = async (req, res) => {
       return res.status(400).json({ message: "Friend request already sent" });
     }
 
-    requestUser.sentFriendRequests.push(acceptUser._id); //adding to main user sentFriendRequests
-    acceptUser.friendRequests.push(requestUser._id); //adding to other user friendRequests\
+    requestUser.sentFriendRequests.push(acceptUser._id);
+    acceptUser.friendRequests.push(requestUser._id);
 
-    //saving both user
     await acceptUser.save();
     const user = await requestUser.save();
 
     const updateUser = await excludeUserFriendsAndFriendRequest(requestUser);
-    const sentRequestIds = user.sentFriendRequests
+    const sentRequestIds = user.sentFriendRequests;
     const sentFriendRequest = await User.find({ _id: { $in: sentRequestIds } });
- 
 
     return res.status(200).json({
       message: "Friend request sent successfully",
-      data: { user: updateUser,sentFriendRequest:sentFriendRequest },
+      data: { user: updateUser, sentFriendRequest },
     });
   } catch (error) {
     console.error("Error adding friend:", error);
@@ -73,20 +107,21 @@ const AddFriend = async (req, res) => {
   }
 };
 
+// Accept Friend
 const AcceptFriend = async (req, res) => {
   const { requester, accepter } = req.body;
-  //accepter main user
-  //requester from friend request
+  const requesterObjectId = toObjectId(requester);
+  const accepterObjectId = toObjectId(accepter);
 
   try {
-    if (!isValidObjectId(requester) || !isValidObjectId(accepter)) {
+    if (!requesterObjectId || !accepterObjectId) {
       return res
         .status(400)
         .json({ message: "Invalid requester or accepter ID" });
     }
 
-    const requestedUser = await User.findById(requester);
-    const acceptedUser = await User.findById(accepter);
+    const requestedUser = await User.findById(requesterObjectId);
+    const acceptedUser = await User.findById(accepterObjectId);
 
     if (!requestedUser) {
       return res.status(404).json({ message: "Requested User Not Found" });
@@ -97,7 +132,8 @@ const AcceptFriend = async (req, res) => {
         .status(400)
         .json({ message: "Cannot accept yourself as a friend" });
     }
-    if (!acceptedUser.friendRequests.includes(requester)) {
+
+    if (!acceptedUser.friendRequests.includes(requesterObjectId)) {
       return res
         .status(400)
         .json({ message: "Friend request not found for accepted user" });
@@ -107,24 +143,25 @@ const AcceptFriend = async (req, res) => {
       return res.status(400).json({ message: "Already Friends" });
     }
 
-    // Remove requestedUser from friendRequests array
     acceptedUser.friendRequests = acceptedUser.friendRequests.filter(
       (request) => request.toString() !== requester
     );
-    // Remove acceptedUser from sentFriendRequests array
-    requestedUser.friendRequests = requestedUser.sentFriendRequests.filter(
+    requestedUser.sentFriendRequests = requestedUser.sentFriendRequests.filter(
       (accept) => accept.toString() !== accepter
     );
 
-    // Add each other to friends list
     acceptedUser.friends.push(requestedUser._id);
     requestedUser.friends.push(acceptedUser._id);
 
     await acceptedUser.save();
     await requestedUser.save();
 
-    const updateFriends = acceptedUser.friends;
-    const updateFriendRequest = acceptedUser.friendRequests;
+    const populatedAcceptUser = await User.findById(accepterObjectId._id)
+      .populate("friends")
+      .populate("friendRequests");
+
+    const updateFriends = populatedAcceptUser.friends;
+    const updateFriendRequest = populatedAcceptUser.friendRequests;
 
     return res.status(200).json({
       message: "Friend request accepted successfully",
@@ -136,46 +173,45 @@ const AcceptFriend = async (req, res) => {
   }
 };
 
+// Remove Friend
 const RemoveFriend = async (req, res) => {
   const { removeUser, user } = req.body;
+  const removeUserObjectId = toObjectId(removeUser);
+  const userObjectId = toObjectId(user);
 
   try {
-    if (!isValidObjectId(removeUser) || !isValidObjectId(user)) {
+    if (!removeUserObjectId || !userObjectId) {
       return res.status(400).json({ message: "Invalid user IDs" });
     }
 
-    const userToRemove = await User.findById(removeUser);
-    const mainUser = await User.findById(user);
+    const userToRemove = await User.findById(removeUserObjectId);
+    const mainUser = await User.findById(userObjectId);
 
     if (!userToRemove || !mainUser) {
-      return res.status(404).json({ message: " users not found" });
+      return res.status(404).json({ message: "Users not found" });
     }
 
     if (!mainUser.friends.includes(userToRemove._id)) {
       return res.status(400).json({ message: "Users are not friends" });
     }
 
-    // Remove userToRemove from mainUser's friends list
     mainUser.friends = mainUser.friends.filter(
       (friend) => !friend.equals(userToRemove._id)
     );
 
-    // Remove mainUser from userToRemove's friends list
     userToRemove.friends = userToRemove.friends.filter(
       (friend) => !friend.equals(mainUser._id)
     );
 
     await userToRemove.save();
-    const updateMainUser = await mainUser.save();
-    const updateFriend = await User.find({
-      _id: { $in: updateMainUser.friends },
-    });
+    const updatedUser = await mainUser.save();
+    const updatedFriend = (await updatedUser.populate("friends")).friends;
 
-    const people = await excludeUserFriendsAndFriendRequest(updateMainUser);
+    const people = await excludeUserFriendsAndFriendRequest(updatedUser);
 
     return res.status(200).json({
       message: "Friendship removed successfully",
-      data: { friends: updateFriend, users: people },
+      data: { friends: updatedFriend, users: people },
     });
   } catch (error) {
     console.error("Error removing friendship:", error);
@@ -183,15 +219,17 @@ const RemoveFriend = async (req, res) => {
   }
 };
 
+// Show Friends
 const showFriends = async (req, res) => {
   const { userId } = req.query;
+  const userObjectId = toObjectId(userId);
 
   try {
-    if (!isValidObjectId(userId)) {
+    if (!userObjectId) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userObjectId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -209,16 +247,11 @@ const showFriends = async (req, res) => {
   }
 };
 
-
-
+// Show Friend Requests
 const showFriendRequests = async (req, res) => {
   const { userId } = req.query;
 
   try {
-    if (!isValidObjectId(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -237,14 +270,11 @@ const showFriendRequests = async (req, res) => {
   }
 };
 
+// Show User Sent Requests
 const showUserSentRequest = async (req, res) => {
   const { userId } = req.query;
 
   try {
-    if (!isValidObjectId(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -264,12 +294,15 @@ const showUserSentRequest = async (req, res) => {
   }
 };
 
+// Cancel User Sent Request
 const cancelUserSentRequest = async (req, res) => {
   const { userId, friendId } = req.body;
+  const userObjectId = toObjectId(userId);
+  const friendObjectId = toObjectId(friendId);
 
   try {
-    let user = await User.findById(userId);
-    const friendToCancel = await User.findById(friendId);
+    let user = await User.findById(userObjectId);
+    const friendToCancel = await User.findById(friendObjectId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -289,9 +322,10 @@ const cancelUserSentRequest = async (req, res) => {
     const updateUser = await user.save();
     await friendToCancel.save();
 
-    
-    const sentRequestIds = updateUser.sentFriendRequests
-    const updateSentFriendRequest = await User.find({ _id: { $in: sentRequestIds } });
+    const sentRequestIds = updateUser.sentFriendRequests;
+    const updateSentFriendRequest = await User.find({
+      _id: { $in: sentRequestIds },
+    });
 
     const updateFriend = await excludeUserFriendsAndFriendRequest(updateUser);
 
@@ -308,6 +342,7 @@ const cancelUserSentRequest = async (req, res) => {
   }
 };
 
+// Exclude User Friends and Friend Request
 const excludeUserFriendsAndFriendRequest = (user) => {
   try {
     const userFriendIds =
@@ -331,10 +366,6 @@ const excludeUserFriendsAndFriendRequest = (user) => {
   }
 };
 
-function isValidObjectId(id) {
-  return mongoose.Types.ObjectId.isValid(id);
-}
-
 module.exports = {
   AddFriend,
   AcceptFriend,
@@ -344,4 +375,5 @@ module.exports = {
   showPeople,
   showUserSentRequest,
   cancelUserSentRequest,
+  getFriend,
 };

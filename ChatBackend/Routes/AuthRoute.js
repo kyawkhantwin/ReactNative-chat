@@ -7,8 +7,7 @@ const {
   getUser,
 } = require("../Controller/UserController");
 const Router = express.Router();
-const upload = require("../Middleware/upload");
-const Middleware = require("../Middleware/middleware");
+const Middleware = require("../Middleware/Middleware");
 
 Router.post("/login", Login);
 Router.post("/register", Register);

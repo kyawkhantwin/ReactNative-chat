@@ -1,6 +1,6 @@
 const express = require("express")
 const { sendMessage, getMessage } = require("../Controller/ChatController")
-const  Middleware  = require("../Middleware/middleware")
+const  Middleware  = require("../Middleware/Middleware")
 const Router = express.Router()
 Router.use(Middleware)
 

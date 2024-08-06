@@ -5,7 +5,7 @@ const { SECRET } = require("../src/config");
 
 const createToken = (user) => {
   return jwt.sign(
-    { _id: user._id, name: user.name, avatar: user.avatar, email: user.email },
+    { _id: user._id, name: user.name, email: user.email },
     SECRET,
     { expiresIn: "70h" }
   );
@@ -124,10 +124,7 @@ const DeleteUser = async (req, res) => {
 };
 
 const EditUser = async (req, res) => {
-  const { userId,  avatar } =
-    req.body;
-  
-
+  const { userId, avatar } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -137,8 +134,6 @@ const EditUser = async (req, res) => {
         message: "User not found.",
       });
     }
-
-  
 
     user.avatar = avatar;
 
