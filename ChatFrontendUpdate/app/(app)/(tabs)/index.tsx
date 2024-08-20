@@ -24,6 +24,7 @@ const Home = () => {
         updateUserLists(users);
       })
       .catch((error) => {
+        console.log(error)
         Toast.error(error?.response?.data?.message);
       });
   };

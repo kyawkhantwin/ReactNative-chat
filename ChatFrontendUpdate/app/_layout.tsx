@@ -19,22 +19,27 @@ import {
 } from "react-native-paper";
 import { AppProvider, useAppContext } from "@/utilities/useAppContext";
 import ToastManager, { Toast } from "toastify-react-native";
-import { initializeToken, socket, token, userId } from "@/utilities/Config";
+import { initializeToken, socket, token as storedToken, userId } from "@/utilities/Config";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const [tokenInitialized, setTokenInitialized] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const loadToken = async () => {
-      await initializeToken();
-      setTokenInitialized(true); 
+      try {
+        await initializeToken();
+        setTokenInitialized(true);
+        setIsAuthenticated(!!storedToken); // Set authentication state based on token
+      } catch (error) {
+        console.error("Error loading token:", error);
+      }
     };
 
     loadToken();
@@ -42,8 +47,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (socket) {
-      socket.on("connect", (msg) => {});
-      socket.on("disconnect", (msg) => {
+      socket.on("connect", () => {});
+      socket.on("disconnect", () => {
         Toast.error("Disconnected");
       });
       socket.emit("register", userId);
@@ -60,12 +65,12 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <Layout />
+      <Layout isAuthenticated={isAuthenticated} />
     </AppProvider>
   );
 }
 
-const Layout = () => {
+const Layout = ({ isAuthenticated }) => {
   const { LightTheme, DarkTheme } = adaptNavigationTheme({
     reactNavigationLight: NavigationDefaultTheme,
     reactNavigationDark: NavigationDarkTheme,
@@ -74,6 +79,7 @@ const Layout = () => {
   const CombinedDefaultTheme = merge(MD3LightTheme, LightTheme);
   const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme);
   const { theme } = useAppContext();
+
   return (
     <PaperProvider
       theme={theme === "dark" ? CombinedDarkTheme : CombinedDefaultTheme}
@@ -83,13 +89,14 @@ const Layout = () => {
       >
         <ToastManager />
         <Stack screenOptions={{ headerShown: false }}>
-          {token && (
+          {isAuthenticated ? (
+            <>
+              <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            </>
+          ) : (
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           )}
-          {false && (
-            <Stack.Screen name="(app)" options={{ headerShown: false }} />
-          )}
-          <Stack.Screen name="+not-found" />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </PaperProvider>

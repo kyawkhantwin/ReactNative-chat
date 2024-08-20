@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
@@ -32,7 +32,9 @@ const Register = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
-        <Card style={styles.cardContainer}>
+
+      <Card style={[styles.cardContainer,  Platform.OS === 'web' && { width: 600 },]}>
+
           <Card.Content>
             <Text
               variant="titleLarge"

@@ -42,8 +42,23 @@ app.use("/img", express.static(path.join("src", "avatar")));
 
 const users = {};
 
+mongoose
+  .connect(mongoDBUrl)
+  .then(() => {
+    console.log("MongoDB connected");
+    server.listen(3333, () => {
+      console.log("Server is listening on port 3333");
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
+
 io.on("connection", (socket) => {
+  console.log("A user connected");
+
   socket.on("register", (userId) => {
+    console.log(`Register event received with userId: ${userId}`);
     if (userId) {
       users[userId] = socket.id;
       io.emit("onlineUsers", Object.keys(users));
@@ -51,10 +66,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message", (data) => {
+    console.log(`Message event received with data: ${JSON.stringify(data)}`);
     const { receiver } = data;
     const receiverSocketId = users[receiver];
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("message", data); // Send message to the specific receiver
+      io.to(receiverSocketId).emit("message", data);
     }
   });
 
@@ -69,14 +85,3 @@ io.on("connection", (socket) => {
     }
   });
 });
-
-mongoose
-  .connect(mongoDBUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    server.listen(3333, "192.168.100.64", () => {
-      console.log("Server is listening on port 3333");
-    });
-  })
-  .catch((err) => {
-    console.log(err);
-  });

@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { URL, initializeToken } from "../../utilities/Config";
@@ -39,8 +39,11 @@ const Login = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Card style={styles.cardContainer}>
+      <View  style={[
+        styles.container, 
+      
+      ]}>
+        <Card style={[styles.cardContainer,  Platform.OS === 'web' && { width: 600 },]}>
           <Card.Content>
             <Text
               variant="titleLarge"
@@ -60,12 +63,14 @@ const Login = () => {
                 }
               />
               <TextInput
+              
                 style={styles.formInput}
                 label="Password"
                 value={formData.password}
                 onChangeText={(text) =>
                   setFormData({ ...formData, password: text })
                 }
+                secureTextEntry
               />
 
               <Button

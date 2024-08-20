@@ -1,4 +1,4 @@
-import { View, ScrollView, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet, Platform } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, Card, List, RadioButton, useTheme } from "react-native-paper";
@@ -39,7 +39,7 @@ const Settings = () => {
 
   return (
     <CenteredSafeAreaView>
-      <View style={{ marginTop: 10 }}>
+      <View style={{ marginTop: 50 ,flex:1, justifyContent:"center",alignItems:'center' }}>
         <Avatar.Image
           style={styles.avatar}
           size={100}
@@ -50,7 +50,7 @@ const Settings = () => {
           }
         />
 
-        <Card style={styles.cardContainer}>
+        <Card style={[styles.cardContainer ,Platform.OS === 'web' && {width:800}]}>
           <List.Section style={styles.listContainer}>
             <List.Subheader>User</List.Subheader>
             <List.Item
