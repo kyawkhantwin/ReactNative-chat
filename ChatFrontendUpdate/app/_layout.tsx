@@ -10,7 +10,6 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
 import {
   adaptNavigationTheme,
   MD3DarkTheme,
@@ -36,7 +35,8 @@ export default function RootLayout() {
       try {
         await initializeToken();
         setTokenInitialized(true);
-        setIsAuthenticated(!!storedToken); // Set authentication state based on token
+        setIsAuthenticated(!!storedToken); 
+        console.log(userId)
       } catch (error) {
         console.error("Error loading token:", error);
       }
@@ -79,6 +79,8 @@ const Layout = ({ isAuthenticated }) => {
   const CombinedDefaultTheme = merge(MD3LightTheme, LightTheme);
   const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme);
   const { theme } = useAppContext();
+
+  console.log('isAuth',isAuthenticated)
 
   return (
     <PaperProvider

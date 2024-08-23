@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import { io } from "socket.io-client";
 
 export const URL = "http://localhost:3333/";
@@ -27,8 +27,9 @@ export const initializeToken = async () => {
     if (!token || typeof token !== 'string') {
       throw new Error("Invalid token format: must be a non-empty string");
     }
-    const decodedToken = jwtDecode(token);
+    const decodedToken =  jwtDecode(token);
     userId = decodedToken._id;
+    console.log(decodedToken)
   } catch (error) {
     console.error("Error initializing token:", error);
   }
