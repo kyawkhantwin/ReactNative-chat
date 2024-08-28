@@ -1,3 +1,4 @@
+// RootLayout.js
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
@@ -7,7 +8,7 @@ import merge from "deepmerge";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "react-native-reanimated";
 
 import {
@@ -17,60 +18,37 @@ import {
   PaperProvider,
 } from "react-native-paper";
 import { AppProvider, useAppContext } from "@/utilities/useAppContext";
-import ToastManager, { Toast } from "toastify-react-native";
-import { initializeToken, socket, token as storedToken, userId } from "@/utilities/Config";
+import ToastManager from "toastify-react-native";
+import { AuthProvider, useAuth } from "@/utilities/AuthContext";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-  const [tokenInitialized, setTokenInitialized] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const loadToken = async () => {
-      try {
-        await initializeToken();
-        setTokenInitialized(true);
-        setIsAuthenticated(!!storedToken); 
-        console.log(userId)
-      } catch (error) {
-        console.error("Error loading token:", error);
-      }
-    };
-
-    loadToken();
-  }, []);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on("connect", () => {});
-      socket.on("disconnect", () => {
-        Toast.error("Disconnected");
-      });
-      socket.emit("register", userId);
-    }
-
-    if (loaded && tokenInitialized) {
+    if (loaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, tokenInitialized, socket]);
+  }, [loaded]);
 
-  if (!loaded || !tokenInitialized) {
+  if (!loaded) {
     return null;
   }
 
   return (
     <AppProvider>
-      <Layout isAuthenticated={isAuthenticated} />
+      <AuthProvider>
+        <Layout />
+      </AuthProvider>
     </AppProvider>
   );
 }
 
-const Layout = ({ isAuthenticated }) => {
+const Layout = () => {
+  const { isAuthenticated, tokenInitialized } = useAuth();
   const { LightTheme, DarkTheme } = adaptNavigationTheme({
     reactNavigationLight: NavigationDefaultTheme,
     reactNavigationDark: NavigationDarkTheme,
@@ -80,7 +58,9 @@ const Layout = ({ isAuthenticated }) => {
   const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme);
   const { theme } = useAppContext();
 
-  console.log('isAuth',isAuthenticated)
+  if (!tokenInitialized) {
+    return null;
+  }
 
   return (
     <PaperProvider
@@ -90,14 +70,12 @@ const Layout = ({ isAuthenticated }) => {
         value={theme === "dark" ? CombinedDarkTheme : CombinedDefaultTheme}
       >
         <ToastManager />
-        <Stack screenOptions={{ headerShown: false }}>
-          {isAuthenticated ? (
-            <>
-              <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            </>
-          ) : (
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          )}
+        <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(app)" : "(auth)"}>
+          {isAuthenticated ?
+            (<Stack.Screen name="(app)" options={{ headerShown: false }} />)
+            :
+            (<Stack.Screen name="(auth)" options={{ headerShown: false }} />)
+          }
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>

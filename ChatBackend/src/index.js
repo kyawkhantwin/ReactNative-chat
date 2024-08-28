@@ -16,12 +16,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(
-  cors({
-    origin: "http://localhost:8081",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
+  cors()
 );
 
 app.use(express.json({ limit: "50mb" }));
@@ -47,7 +42,7 @@ const users = {};
 mongoose
   .connect(process.env.mongoDBUrl)
   .then(() => {
-    server.listen(3333, () => {
+    server.listen(8080, () => {
       console.log("Server is listening on port 3333");
     });
   })

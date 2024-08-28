@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {jwtDecode} from "jwt-decode";
 import { io } from "socket.io-client";
 
-export const URL = "http://localhost:3333/";
+export const URL = "http://3.88.234.95:8080/";
 
 export let userId;
 export const socket = io(URL);
@@ -33,6 +33,11 @@ export const initializeToken = async () => {
   } catch (error) {
     console.error("Error initializing token:", error);
   }
+};
+
+export const clearToken = () => {
+  
+  localStorage.removeItem('token'); 
 };
 
 initializeToken();

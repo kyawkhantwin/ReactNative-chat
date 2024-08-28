@@ -8,8 +8,10 @@ import { router, useNavigation } from "expo-router";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 import axios from "axios";
 import { token, URL, userId } from "@/utilities/Config";
+import { useAuth } from "@/utilities/AuthContext";
 
 const Settings = () => {
+  const {logout} = useAuth()
   const navigation = useNavigation();
   const paperTheme = useTheme();
   const [user, setUser] = useState();
@@ -32,10 +34,7 @@ const Settings = () => {
     getUser();
   }, []);
 
-  const logout = async () => {
-    await AsyncStorage.clear();
-    router.push("/login");
-  };
+
 
   return (
     <CenteredSafeAreaView>

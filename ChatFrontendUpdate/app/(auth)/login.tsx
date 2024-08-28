@@ -8,8 +8,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Toast } from "toastify-react-native";
 import { useNavigation } from "expo-router";
 import { router } from "expo-router";
+import { useAuth } from "@/utilities/AuthContext";
 
 const Login = () => {
+  const {setIsAuthenticated} = useAuth()
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
     nameOrEmail: "",
@@ -28,9 +30,7 @@ const Login = () => {
         await AsyncStorage.setItem("token", token);
         const getToken = initializeToken();
 
-        if (getToken) {
-          return router.push("/");
-        }
+        setIsAuthenticated(true)
       })
       .catch((err) => {
         Toast.error(err?.responser?.data?.message || "Error Login");
