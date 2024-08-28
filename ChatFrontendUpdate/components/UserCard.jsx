@@ -21,11 +21,15 @@ const UserCard = ({
         titleStyle={{ fontWeight: "bold" }}
         leftStyle={{ marginRight: 20 }}
         left={(props) => (
-          <Avatar.Image
-            {...props}
-            size={50}
-            source={user.avatar ? user.avatar : require("../assets/avatar.jpg")}
-          />
+           <Avatar.Image
+           {...props}
+           size={50}
+           source={
+             user?.avatar
+               ? { uri: user.avatar }
+               : require("@/assets/avatar.jpg")
+           }
+         />
         )}
         title={user.name}
         subtitle={user.bio}

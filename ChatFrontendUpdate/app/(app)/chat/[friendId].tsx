@@ -1,6 +1,6 @@
 import { View, StyleSheet, ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
-import { Appbar, Avatar } from "react-native-paper";
+import { Appbar, Avatar, ActivityIndicator, Text } from "react-native-paper";
 import SendMessage from "@/components/SendMessage";
 import GetOldMessage from "@/components/GetOldMessage";
 import { useNavigation, useLocalSearchParams } from "expo-router";
@@ -13,8 +13,10 @@ const Chat = () => {
   const { friendId } = useLocalSearchParams();
   const [friend, setFriend] = useState(null);
   const [oldContents, setOldContents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchFriend = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(URL + "friend/detail/" + friendId, {
         headers: {
@@ -25,6 +27,8 @@ const Chat = () => {
       setFriend(response.data.data);
     } catch (error) {
       console.error("Error fetching friend data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,6 +39,16 @@ const Chat = () => {
   const addContent = (content) => {
     setOldContents((prev) => [...prev, ...content]);
   };
+
+  if (loading) {
+    return (
+      <CenteredSafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" animating={true} />
+        <Text>Loading...</Text>
+      </CenteredSafeAreaView>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Appbar.Header>
@@ -66,6 +80,12 @@ const styles = StyleSheet.create({
   container: {
     position: "relative",
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   },
 });
 

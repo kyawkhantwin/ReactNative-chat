@@ -1,7 +1,7 @@
 import { StyleSheet, FlatList, View, Platform } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import UserCard from "@/components/UserCard";
-import { Text } from "react-native-paper";
+import { Text, ActivityIndicator } from "react-native-paper";
 import { URL, userId, token } from "@/utilities/Config";
 import axios from "axios";
 import { useAppContext } from "@/utilities/useAppContext";
@@ -10,26 +10,27 @@ import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 
 const Home = () => {
   const { userLists, updateUserLists } = useAppContext();
+  const [loading, setLoading] = useState(true);
 
   const fetchUsers = async () => {
-    return axios
-      .get(URL, {
+    try {
+      const { data } = await axios.get(URL, {
         params: { userId },
         headers: {
           authorization: `Bearer ${token}`,
         },
-      })
-      .then(({ data }) => {
-        const users = data.data.user;
-        updateUserLists(users);
-      })
-      .catch((error) => {
-        console.log(error)
-        Toast.error(error?.response?.data?.message);
       });
+      const users = data.data.user;
+      updateUserLists(users);
+    } catch (error) {
+      console.log(error);
+      Toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderUserCard = ({ item, index }) => {
+  const renderUserCard = ({ item }) => {
     return (
       <UserCard user={item} title="Add" />
     );
@@ -39,10 +40,17 @@ const Home = () => {
     fetchUsers();
   }, []);
 
+  if (loading) {
+    return (
+      <CenteredSafeAreaView style={styles.centered}>
+        <ActivityIndicator animating={true} size="large" color="#0000ff" />
+      </CenteredSafeAreaView>
+    );
+  }
+
   return (
     <CenteredSafeAreaView>
       <Text style={styles.header}>Add Friend</Text>
-
       <FlatList
         showsVerticalScrollIndicator={false}
         data={userLists}
@@ -69,8 +77,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: "100%",
   },
-  lastInRowCard: {
-    marginHorizontal: 0,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height:'100%'
   },
 });
 

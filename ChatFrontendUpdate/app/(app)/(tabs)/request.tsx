@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, FlatList, View, Platform } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, ActivityIndicator } from "react-native-paper";
 import axios from "axios";
 import { useAppContext } from "@/utilities/useAppContext";
 import { URL, token, userId } from "@/utilities/Config";
@@ -9,12 +9,9 @@ import Empty from "@/components/Empty";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 
 const RequestFriend = () => {
-  const {
-    updateUserSentFriendRequest,
-    userSentFriendRequest,
-  } = useAppContext();
-
+  const { updateUserSentFriendRequest, userSentFriendRequest } = useAppContext();
   const [friendRequests, setFriendRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchFriendsRequest = async () => {
     try {
@@ -48,11 +45,21 @@ const RequestFriend = () => {
 
   useEffect(() => {
     const fetchAllData = async () => {
+      setLoading(true);
       await Promise.all([fetchFriendsRequest(), fetchSentFriendsRequest()]);
+      setLoading(false);
     };
 
     fetchAllData();
   }, []);
+
+  if (loading) {
+    return (
+      <CenteredSafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" animating={true} />
+      </CenteredSafeAreaView>
+    );
+  }
 
   return (
     <CenteredSafeAreaView>
@@ -106,6 +113,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingHorizontal: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   },
 });
 

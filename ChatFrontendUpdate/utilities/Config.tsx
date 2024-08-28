@@ -29,15 +29,14 @@ export const initializeToken = async () => {
     }
     const decodedToken =  jwtDecode(token);
     userId = decodedToken._id;
-    console.log(decodedToken)
   } catch (error) {
     console.error("Error initializing token:", error);
   }
 };
 
-export const clearToken = () => {
+export const clearToken = async () => {
   
-  localStorage.removeItem('token'); 
+  await AsyncStorage.removeItem('token'); 
 };
 
 initializeToken();

@@ -1,44 +1,42 @@
-import { View, ScrollView, StyleSheet, Platform } from "react-native";
+import { View, StyleSheet, ScrollView, Platform } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, Card, List, RadioButton, useTheme } from "react-native-paper";
 import { useAppContext } from "@/utilities/useAppContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, useNavigation } from "expo-router";
-import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 import axios from "axios";
 import { token, URL, userId } from "@/utilities/Config";
 import { useAuth } from "@/utilities/AuthContext";
+import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
+import { useNavigation } from "expo-router";
 
 const Settings = () => {
-  const {logout} = useAuth()
+  const { logout } = useAuth();
   const navigation = useNavigation();
   const paperTheme = useTheme();
   const [user, setUser] = useState();
   const { theme, toggleAppTheme } = useAppContext();
+
   const getUser = async function () {
-    axios
-      .get(URL + "user", {
+    try {
+      const response = await axios.get(URL + "user", {
         headers: {
           authorization: `Bearer ${token}`,
         },
         params: { userId },
-      })
-      .then(({ data }) => {
-        setUser(data.data.user);
-      })
-      .catch((err) => console.log(err));
+      });
+      setUser(response.data.data.user);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
     getUser();
   }, []);
 
-
-
   return (
     <CenteredSafeAreaView>
-      <View style={{ marginTop: 50 ,flex:1, justifyContent:"center",alignItems:'center' }}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Avatar.Image
           style={styles.avatar}
           size={100}
@@ -48,23 +46,20 @@ const Settings = () => {
               : require("@/assets/avatar.jpg")
           }
         />
-
-        <Card style={[styles.cardContainer ,Platform.OS === 'web' && {width:800}]}>
-          <List.Section style={styles.listContainer}>
+        <Card style={[styles.cardContainer, Platform.OS=== "web"
+        ]}>
+          <List.Section>
             <List.Subheader>User</List.Subheader>
             <List.Item
-              title="Edit User "
+              title="Edit User"
               left={() => <List.Icon icon="account" color="green" />}
               onPress={() => navigation.navigate("userEdit")}
             />
 
             <List.Subheader>Theme</List.Subheader>
-
             <List.Item
               title="Light Theme"
-              left={() => (
-                <List.Icon icon="white-balance-sunny" color="orange" />
-              )}
+              left={() => <List.Icon icon="white-balance-sunny" color="orange" />}
               right={() => (
                 <View>
                   <RadioButton
@@ -78,9 +73,7 @@ const Settings = () => {
             />
             <List.Item
               title="Dark Theme"
-              left={() => (
-                <List.Icon icon="moon-waxing-crescent" color="purple" />
-              )}
+              left={() => <List.Icon icon="moon-waxing-crescent" color="purple" />}
               right={() => (
                 <View>
                   <RadioButton
@@ -97,27 +90,31 @@ const Settings = () => {
             <List.Item
               titleStyle={{ color: paperTheme.colors.error }}
               title="Logout"
-              left={() => (
-                <List.Icon icon="logout" color={paperTheme.colors.error} />
-              )}
+              left={() => <List.Icon icon="logout" color={paperTheme.colors.error} />}
               onPress={logout}
             />
           </List.Section>
         </Card>
-      </View>
+      </ScrollView>
     </CenteredSafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
   avatar: {
-    alignSelf: "center",
+    marginBottom: 20,
   },
   cardContainer: {
-    // marginTop: 50,
-    // marginHorizontal: 10,
-  },
-  listContainer: {
-    paddingHorizontal: 7,
+    width: "100%",  // Ensure card takes full width on mobile
+    marginTop: 20,
+    padding: 16,
   },
 });
+
 export default Settings;
