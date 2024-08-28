@@ -5,10 +5,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import { URL } from "@/utilities/Config";
 import { Toast } from "toastify-react-native";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 
 const Register = () => {
-  const navigation = useNavigation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,7 +21,7 @@ const Register = () => {
     axios
       .post(URL + "register", formData)
       .then(({ data }) => {
-        navigation.navigate("Login");
+        router.push('/login')
       })
       .catch((error) => {
         Toast.error(error?.responser?.data?.message || "Failed to register");
