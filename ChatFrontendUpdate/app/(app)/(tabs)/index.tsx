@@ -7,13 +7,17 @@ import axios from "axios";
 import { useAppContext } from "@/utilities/useAppContext";
 import { Toast } from "toastify-react-native";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
+import { useAuth } from "@/utilities/AuthContext";
 
 const Home = () => {
   const { userLists, updateUserLists } = useAppContext();
   const [loading, setLoading] = useState(true);
+  const {tokenInitialized} = useAuth()
+
 
   const fetchUsers = async () => {
     try {
+    if(tokenInitialized){
       const { data } = await axios.get(URL, {
         params: { userId },
         headers: {
@@ -22,6 +26,7 @@ const Home = () => {
       });
       const users = data.data.user;
       updateUserLists(users);
+    }
     } catch (error) {
       console.log(error);
       Toast.error(error?.response?.data?.message);
@@ -38,7 +43,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [tokenInitialized]);
 
   if (loading) {
     return (

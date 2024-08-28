@@ -11,7 +11,7 @@ import { router } from "expo-router";
 import { useAuth } from "@/utilities/AuthContext";
 
 const Login = () => {
-  const {setIsAuthenticated} = useAuth()
+  const {setIsAuthenticated ,setTokenInitialized} = useAuth()
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
     nameOrEmail: "",
@@ -28,9 +28,10 @@ const Login = () => {
         const token = data.data.token;
 
         await AsyncStorage.setItem("token", token);
-        const getToken = initializeToken();
+        await initializeToken();
 
         setIsAuthenticated(true)
+        setTokenInitialized(true)
       })
       .catch((err) => {
         Toast.error(err?.responser?.data?.message || "Error Login");
