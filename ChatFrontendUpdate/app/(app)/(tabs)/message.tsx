@@ -1,29 +1,26 @@
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, View, Pressable } from "react-native";
-import { Avatar, Card, Text, ActivityIndicator } from "react-native-paper";
+import { Avatar, Card, Divider, Text } from "react-native-paper";
 import axios from "axios";
 import { URL, socket, token, userId } from "@/utilities/Config";
 import Empty from "@/components/Empty";
 import { Toast } from "toastify-react-native";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 
 const Message = () => {
   const [friends, setFriends] = useState([]);
   const [activeUsers, setActiveUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (socket) {
       socket.on("onlineUsers", (users) => {
-        console.log('online',users)
         setActiveUsers(users);
       });
     }
   }, []);
 
   const fetchFriends = async () => {
-    setLoading(true);
     try {
       const { data } = await axios.get(URL + "friend", {
         params: { userId },
@@ -37,22 +34,12 @@ const Message = () => {
         error?.response?.data?.message ||
           "Internal Server Error: Cannot Fetch Messages"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchFriends();
   }, []);
-
-  if (loading) {
-    return (
-      <CenteredSafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" animating={true} />
-      </CenteredSafeAreaView>
-    );
-  }
 
   return (
     <CenteredSafeAreaView>
@@ -121,6 +108,7 @@ const styles = StyleSheet.create({
     margin: 10,
     fontWeight: "bold",
   },
+
   online: {
     ...circle,
     backgroundColor: "green",
@@ -128,12 +116,6 @@ const styles = StyleSheet.create({
   offline: {
     ...circle,
     backgroundColor: "grey",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100%',
   },
 });
 
