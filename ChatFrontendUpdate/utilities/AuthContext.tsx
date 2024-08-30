@@ -1,11 +1,17 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { initializeToken, token as storedToken, clearToken } from '@/utilities/Config';
+import { initializeToken, token as storedToken, clearToken, socket, userId } from '@/utilities/Config';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [tokenInitialized, setTokenInitialized] = useState(false);
+
+  if(tokenInitialized){
+    if(socket){
+      socket.emit("register", userId);
+    }
+  }
 
   useEffect(() => {
     const loadToken = async () => {

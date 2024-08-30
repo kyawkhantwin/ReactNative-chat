@@ -4,10 +4,15 @@ import React from "react";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { socket } from "@/utilities/Config";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+  socket.on('connect', () => {
+    console.log('Successfully connected to the server!');
+    
+  });
   return (
     <Tabs
       screenOptions={{

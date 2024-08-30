@@ -48,7 +48,6 @@ const UserEdit = () => {
         bio: user.bio,
         avatar: user.avatar || selectedImage,
       };
-      console.log(formData);
 
       const response = await axios.put(URL + "edit", formData, {
         headers: {

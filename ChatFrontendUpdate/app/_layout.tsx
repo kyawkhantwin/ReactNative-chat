@@ -18,8 +18,9 @@ import {
   PaperProvider,
 } from "react-native-paper";
 import { AppProvider, useAppContext } from "@/utilities/useAppContext";
-import ToastManager from "toastify-react-native";
+import ToastManager, { Toast } from "toastify-react-native";
 import { AuthProvider, useAuth } from "@/utilities/AuthContext";
+import { socket, userId } from "@/utilities/Config";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,6 +39,15 @@ export default function RootLayout() {
     return null;
   }
 
+  useEffect(() => {
+    if (socket) {
+      socket.on("connect", () => {});
+      socket.on("disconnect", () => {
+        Toast.error("Disconnected");
+      });
+    }
+
+  },[])
   return (
     <AppProvider>
       <AuthProvider>

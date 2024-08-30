@@ -16,6 +16,7 @@ const Message = () => {
   useEffect(() => {
     if (socket) {
       socket.on("onlineUsers", (users) => {
+        console.log('online',users)
         setActiveUsers(users);
       });
     }

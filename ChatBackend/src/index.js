@@ -37,7 +37,9 @@ app.use("/friend", FriendRoute);
 app.get("/", showPeople);
 app.use("/img", express.static(path.join("src", "avatar")));
 
-const users = {};
+
+
+
 
 mongoose
   .connect(process.env.mongoDBUrl)
@@ -50,35 +52,35 @@ mongoose
     console.error("MongoDB connection error:", err);
   });
 
-io.on("connection", (socket) => {
-  console.log("connected")
+  const users = {};
 
-  socket.on("register", (userId) => {
-    if (userId) {
-      console.log(users)
-      users[userId] = socket.id;
-      io.emit("onlineUsers", users);
-    }
-  });
+  io.on("connection", (socket) => {
+    socket.on("register", (userId) => {
 
-  socket.on("message", (data) => {
-    const { receiver } = data;
-    const receiverSocketId = receiver;
-
-    if (receiverSocketId ) {
-console.log('i recieve')
-      io.to(receiverSocketId).emit("message", data);
-    }
-  });
-
-  socket.on("disconnect", () => {
-    for (let userId in users) {
-      if (users[userId] === socket.id) {
-        delete users[userId];
-
+      if (userId) {
+        users[userId] = socket.id;
         io.emit("onlineUsers", Object.keys(users));
-        break;
       }
-    }
+    });
+  
+    socket.on("message", (data) => {
+      const { receiver } = data;
+      const receiverSocketId = users[receiver];
+      if (receiverSocketId) {
+        console.log(receiverSocketId)
+        io.to(receiverSocketId).emit("message", data); 
+      }
+    });
+  
+    socket.on("disconnect", () => {
+      console.log("A user disconnected");
+      for (let userId in users) {
+        if (users[userId] === socket.id) {
+          delete users[userId];
+          io.emit("onlineUsers", Object.keys(users));
+          break;
+        }
+      }
+    });
   });
-});
+  
