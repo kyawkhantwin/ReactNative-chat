@@ -23,7 +23,6 @@ const Chat = () => {
           authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data.data);
       setFriend(response.data.data);
     } catch (error) {
       console.error("Error fetching friend data:", error);
@@ -44,7 +43,6 @@ const Chat = () => {
     return (
       <CenteredSafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" animating={true} />
-        <Text>Loading...</Text>
       </CenteredSafeAreaView>
     );
   }

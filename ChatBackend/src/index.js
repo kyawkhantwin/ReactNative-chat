@@ -43,7 +43,7 @@ mongoose
   .connect(process.env.mongoDBUrl)
   .then(() => {
     server.listen(8080, () => {
-      console.log("Server is listening on port 3333");
+      console.log("Server is listening on port 8080");
     });
   })
   .catch((err) => {
@@ -51,18 +51,22 @@ mongoose
   });
 
 io.on("connection", (socket) => {
+  console.log("connected")
 
   socket.on("register", (userId) => {
     if (userId) {
+      console.log(users)
       users[userId] = socket.id;
-      io.emit("onlineUsers", Object.keys(users));
+      io.emit("onlineUsers", users);
     }
   });
 
   socket.on("message", (data) => {
     const { receiver } = data;
-    const receiverSocketId = users[receiver];
-    if (receiverSocketId) {
+    const receiverSocketId = receiver;
+
+    if (receiverSocketId ) {
+console.log('i recieve')
       io.to(receiverSocketId).emit("message", data);
     }
   });
@@ -71,6 +75,7 @@ io.on("connection", (socket) => {
     for (let userId in users) {
       if (users[userId] === socket.id) {
         delete users[userId];
+
         io.emit("onlineUsers", Object.keys(users));
         break;
       }

@@ -18,10 +18,11 @@ const SendMessage = ({ addContent, friendId }) => {
         },
       })
       .then(({ data }) => {
-        const newContent = data.data.newMessage;
-        socket.emit("message", newContent);
+        const resContent = data.data.newMessage;
+        socket.emit("message", resContent);
+        console.log('sender',resContent)
 
-        addContent([newContent]); // [] is for spreading purpose
+        addContent([resContent]);
         setNewContent("");
       })
       .catch((error) => {
