@@ -17,9 +17,6 @@ const AppLayout = () => {
   }, [isAuthenticated, isReady, router]);
 
  
-
- 
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />

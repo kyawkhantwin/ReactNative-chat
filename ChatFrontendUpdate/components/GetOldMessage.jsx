@@ -27,7 +27,6 @@ const GetOldMessage = ({ addContent, oldContents, friendId }) => {
 
   useEffect(() => {
     socket.on("message", (data) => {
-      console.log('receiver', data)
       addContent([data]);
     });
     getMessage();

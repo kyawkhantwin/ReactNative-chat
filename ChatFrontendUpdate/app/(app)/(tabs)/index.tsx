@@ -1,49 +1,58 @@
-import { StyleSheet, FlatList, View, Platform } from "react-native";
-import { useEffect, useState } from "react";
-import UserCard from "@/components/UserCard";
-import { Text, ActivityIndicator } from "react-native-paper";
-import { URL, userId, token } from "@/utilities/Config";
-import axios from "axios";
-import { useAppContext } from "@/utilities/useAppContext";
-import { Toast } from "toastify-react-native";
-import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
-import { useAuth } from "@/utilities/AuthContext";
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet, FlatList, View, Platform } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
+import UserCard from '@/components/UserCard';
+import CenteredSafeAreaView from '@/components/CenteredSafeAreaView';
+import axios from 'axios';
+import { URL, userId, token, socket } from '@/utilities/Config';
+import { useAppContext } from '@/utilities/useAppContext';
+import { Toast } from 'toastify-react-native';
+import { useAuth } from '@/utilities/AuthContext';
 
 const Home = () => {
   const { userLists, updateUserLists } = useAppContext();
   const [loading, setLoading] = useState(true);
-  const {tokenInitialized} = useAuth()
+  const { tokenInitialized } = useAuth();
 
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
+    if (!tokenInitialized) return;
+    
     try {
-    if(tokenInitialized){
       const { data } = await axios.get(URL, {
         params: { userId },
         headers: {
           authorization: `Bearer ${token}`,
         },
       });
-      const users = data.data.user;
-      updateUserLists(users);
-    }
+
+      updateUserLists(data.data.user);
     } catch (error) {
       console.log(error);
-      Toast.error(error?.response?.data?.message);
+      Toast.error(error?.response?.data?.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
-  };
+  }, [tokenInitialized, userId, token, updateUserLists]);
 
-  const renderUserCard = ({ item }) => {
-    return (
-      <UserCard user={item} title="Add" />
+  const handleAddFriend = useCallback((data) => {
+    updateUserLists((prevUsers) => 
+      prevUsers.filter((user) => user._id !== data._id)
     );
-  };
+  }, [updateUserLists]);
 
   useEffect(() => {
     fetchUsers();
-  }, [tokenInitialized]);
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('addFriend', handleAddFriend);
+
+      return () => {
+        socket.off('addFriend', handleAddFriend);
+      };
+    }
+  }, [socket, handleAddFriend]);
 
   if (loading) {
     return (
@@ -53,6 +62,11 @@ const Home = () => {
     );
   }
 
+  const renderUserCard = ({ item }) => {
+    return (
+      <UserCard user={item} title="Add" />
+    );
+  };
   return (
     <CenteredSafeAreaView>
       <Text style={styles.header}>Add Friend</Text>

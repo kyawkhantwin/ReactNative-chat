@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { FlatList, StyleSheet, View } from "react-native";
-import { URL, token, userId } from "@/utilities/Config";
+import { URL, socket, token, userId } from "@/utilities/Config";
 import UserCard from "@/components/UserCard";
 import Empty from "@/components/Empty";
 import { Toast } from "toastify-react-native";
@@ -33,6 +33,26 @@ const Friend = () => {
       setLoading(false);
     }
   };
+
+  useEffect(()=>{
+
+    const handleAcceptFriend = (data)=>{
+      updateFriends((prev) => [...prev,data])
+    }
+    const handleUnFriend = (data)=>{
+      updateFriends((prev) => prev.filter(prev => prev._id !== data._id))
+    }
+    if(socket){
+      socket.on('acceptFriend',handleAcceptFriend)
+      socket.on('unFriend',handleUnFriend)
+    }
+
+    return ()=>{
+      socket.off('acceptFriend',handleAcceptFriend)
+      socket.off('unFriend',handleUnFriend)
+
+    }
+  },[socket])
 
   useEffect(() => {
     fetchFriends();

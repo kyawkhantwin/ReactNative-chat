@@ -1,19 +1,19 @@
 import { View, StyleSheet, ScrollView } from "react-native";
-import React, { useEffect, useState } from "react";
-import { Appbar, Avatar, ActivityIndicator, Text } from "react-native-paper";
+import React, { useEffect, useRef, useState } from "react";
+import { Appbar, Avatar, ActivityIndicator } from "react-native-paper";
 import SendMessage from "@/components/SendMessage";
 import GetOldMessage from "@/components/GetOldMessage";
-import { useNavigation, useLocalSearchParams } from "expo-router";
+import {  useLocalSearchParams, router } from "expo-router";
 import axios from "axios";
 import { token, URL } from "@/utilities/Config";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
 
 const Chat = () => {
-  const navigation = useNavigation();
   const { friendId } = useLocalSearchParams();
   const [friend, setFriend] = useState(null);
   const [oldContents, setOldContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const scrollViewRef = useRef<ScrollView>(null); // Ref for the ScrollView
 
   const fetchFriend = async () => {
     setLoading(true);
@@ -35,6 +35,12 @@ const Chat = () => {
     fetchFriend();
   }, [friendId]);
 
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [oldContents]);
+
   const addContent = (content) => {
     setOldContents((prev) => [...prev, ...content]);
   };
@@ -50,7 +56,7 @@ const Chat = () => {
   return (
     <View style={styles.container}>
       <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <Appbar.BackAction onPress={() => router.push('/message')} />
         <Avatar.Image
           size={50}
           style={{ marginRight: 10 }}
@@ -59,7 +65,11 @@ const Chat = () => {
         <Appbar.Content titleStyle={{ fontSize: 20 }} title={friend?.name} />
         <Appbar.Action icon="information-outline" onPress={() => {}} />
       </Appbar.Header>
-      <ScrollView style={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
         <CenteredSafeAreaView>
           <GetOldMessage
             oldContents={oldContents}
@@ -81,9 +91,9 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100%',
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
   },
 });
 

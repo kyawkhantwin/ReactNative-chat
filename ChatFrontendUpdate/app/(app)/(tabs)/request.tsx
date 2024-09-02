@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, FlatList, View, Platform } from "react-native";
+import { StyleSheet, View, ScrollView, Platform, FlatList } from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import axios from "axios";
 import { useAppContext } from "@/utilities/useAppContext";
-import { URL, token, userId } from "@/utilities/Config";
+import { URL, socket, token, userId } from "@/utilities/Config";
 import UserCard from "@/components/UserCard";
 import Empty from "@/components/Empty";
 import CenteredSafeAreaView from "@/components/CenteredSafeAreaView";
@@ -12,6 +12,26 @@ const RequestFriend = () => {
   const { updateUserSentFriendRequest, userSentFriendRequest } = useAppContext();
   const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("addFriend", (data) => {
+        setFriendRequests((prev) => [...prev, data]);
+      });
+
+      socket.on("acceptFriend", (data) => {
+        updateUserSentFriendRequest((prev) =>
+          prev.filter((prev) => prev._id !== data._id)
+        );
+      });
+    }
+    return () => {
+      if (socket) {
+        socket.off("addFriend");
+        socket.off("acceptFriend");
+      }
+    };
+  }, [socket]);
 
   const fetchFriendsRequest = async () => {
     try {
@@ -49,7 +69,6 @@ const RequestFriend = () => {
       await Promise.all([fetchFriendsRequest(), fetchSentFriendsRequest()]);
       setLoading(false);
     };
-
     fetchAllData();
   }, []);
 
@@ -62,52 +81,62 @@ const RequestFriend = () => {
   }
 
   return (
-    <CenteredSafeAreaView>
-      <Text style={styles.header}>Friend Requests</Text>
-
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={Platform.OS === "web" && styles.webListContainer}
-        data={friendRequests}
-        renderItem={({ item }) => (
-          <UserCard
-            user={item}
-            title="Request"
-            updateFriendRequests={setFriendRequests}
+    <CenteredSafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <Text style={styles.header}>Friend Requests</Text>
+        <View style={styles.listContainer}>
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            data={friendRequests}
+            renderItem={({ item }) => (
+              <UserCard
+                user={item}
+                title="Request"
+                updateFriendRequests={setFriendRequests}
+              />
+            )}
+            keyExtractor={(user) => user._id.toString()}
+            ListEmptyComponent={() => (
+              <Empty text="Friend Requests will appear here" />
+            )}
+            contentContainerStyle={Platform.OS === "web" && styles.webListContainer}
           />
-        )}
-        keyExtractor={(user) => user._id.toString()}
-        ListEmptyComponent={() => (
-          <Empty text="Friend Requests will appear here" />
-        )}
-      />
+        </View>
 
-      <Text style={styles.header}>Your Friend Requests</Text>
-
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={Platform.OS === "web" && styles.webListContainer}
-        data={userSentFriendRequest}
-        renderItem={({ item }) => (
-          <UserCard
-            user={item}
-            title="SentRequest"
+        <Text style={styles.header}>Your Friend Requests</Text>
+        <View style={styles.listContainer}>
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            data={userSentFriendRequest}
+            renderItem={({ item }) => (
+              <UserCard user={item} title="SentRequest" />
+            )}
+            keyExtractor={(user) => user._id.toString()}
+            ListEmptyComponent={() => (
+              <Empty text="Added Friends will appear here" />
+            )}
+            contentContainerStyle={Platform.OS === "web" && styles.webListContainer}
           />
-        )}
-        keyExtractor={(user) => user._id.toString()}
-        ListEmptyComponent={() => (
-          <Empty text="Added Friends will appear here" />
-        )}
-      />
+        </View>
+      </ScrollView>
     </CenteredSafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1, // Ensure container takes up full space
+  },
+  scrollViewContent: {
+    flexGrow: 1, // Ensure ScrollView content takes up full space
+  },
   header: {
     fontSize: 20,
     margin: 10,
     fontWeight: "bold",
+  },
+  listContainer: {
+    marginBottom: 20, // Space between lists
   },
   webListContainer: {
     flexDirection: "row",
@@ -116,9 +145,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100%',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

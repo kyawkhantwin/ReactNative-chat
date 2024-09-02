@@ -34,6 +34,8 @@ const Login = () => {
         setTokenInitialized(true)
       })
       .catch((err) => {
+        console.log(err);
+
         Toast.error(err?.responser?.data?.message || "Error Login");
       });
   };

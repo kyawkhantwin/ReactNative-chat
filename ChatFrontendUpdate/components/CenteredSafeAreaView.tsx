@@ -5,7 +5,7 @@ import { useMediaQuery } from "react-responsive";
 
 interface CenteredSafeAreaViewProps {
   children: React.ReactNode;
-  style?: ViewStyle; 
+  style?: ViewStyle;
 }
 
 const CenteredSafeAreaView: React.FC<CenteredSafeAreaViewProps> = ({ children, style }) => {
@@ -31,7 +31,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   content: {
-    // Additional styling for content can be added here
+    flex: 1, 
+    width: "100%",
   },
 });
 

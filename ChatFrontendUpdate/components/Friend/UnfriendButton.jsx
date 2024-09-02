@@ -1,33 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, useTheme } from "react-native-paper";
 import axios from "axios";
-import { URL, token, userId } from "../../utilities/Config";
+import { URL, socket, token, userId } from "../../utilities/Config";
 import { Toast } from "toastify-react-native";
 import { useAppContext } from "@/utilities/useAppContext";
 
-// updateFriend is from friend page
 const UnfriendButton = ({ friendId }) => {
   const theme = useTheme();
   const { updateUserLists, updateFriends } = useAppContext();
+  const [loading, setLoading] = useState(false);
 
-  const unFriend = () => {
+  const unFriend = async () => {
+    if (loading) return; 
+    setLoading(true);
     const data = { removeUser: friendId, user: userId };
-    axios
-      .post(URL + "friend/unfriend", data, {
+
+    try {
+      const response = await axios.post(URL + "friend/unfriend", data, {
         headers: {
           authorization: `Bearer ${token}`,
         },
-      })
-      .then(({ data }) => {
-        Toast.warn("Sucessfully,Unfriend User");
-        console.log(data.data);
-        updateUserLists(data.data.users);
-        updateFriends(data.data.friends);
-      })
-      .catch((err) => {
-        console.log(err);
-        Toast.error(err?.response?.data?.message);
       });
+
+      Toast.warn("Successfully unfriended user");
+      if (socket) {
+        socket.emit("unFriend", { userId, friendId });
+      }
+      updateUserLists(response.data.data.users);
+      updateFriends(response.data.data.friends);
+    } catch (error) {
+      console.log(error);
+      Toast.error(error?.response?.data?.message || "Failed to unfriend user.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +42,8 @@ const UnfriendButton = ({ friendId }) => {
       mode="outlined"
       textColor={theme.colors.onSecondary}
       buttonColor={theme.colors.error}
+      disabled={loading}
+      loading={loading}
     >
       Unfriend
     </Button>
