@@ -42,6 +42,9 @@ const Friend = () => {
     const handleUnFriend = (data)=>{
       updateFriends((prev) => prev.filter(prev => prev._id !== data._id))
     }
+   
+
+
     if(socket){
       socket.on('acceptFriend',handleAcceptFriend)
       socket.on('unFriend',handleUnFriend)

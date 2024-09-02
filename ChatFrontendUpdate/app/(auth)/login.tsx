@@ -1,57 +1,52 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Pressable, Platform, Alert } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { URL, initializeToken } from "../../utilities/Config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Toast } from "toastify-react-native";
 import { useNavigation } from "expo-router";
-import { router } from "expo-router";
 import { useAuth } from "@/utilities/AuthContext";
 
 const Login = () => {
-  const {setIsAuthenticated ,setTokenInitialized} = useAuth()
+  const { setIsAuthenticated, setTokenInitialized } = useAuth();
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
     nameOrEmail: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const loginHandler = () => {
+  const loginHandler = async () => {
     if (!formData.nameOrEmail || !formData.password) {
-      return alert("fill all the field");
+      return Alert.alert("Error", "Fill all the fields");
     }
-    axios
-      .post(URL + "login", formData)
-      .then(async ({ data }) => {
-        const token = data.data.token;
 
-        await AsyncStorage.setItem("token", token);
-        await initializeToken();
+    setLoading(true);
 
-        setIsAuthenticated(true)
-        setTokenInitialized(true)
-      })
-      .catch((err) => {
-        console.log(err);
+    try {
+      const { data } = await axios.post(URL + "login", formData);
+      const token = data.data.token;
 
-        Toast.error(err?.responser?.data?.message || "Error Login");
-      });
+      await AsyncStorage.setItem("token", token);
+      await initializeToken();
+
+      setIsAuthenticated(true);
+      setTokenInitialized(true);
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", err?.response?.data?.message || "Error Logging In");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View  style={[
-        styles.container, 
-      
-      ]}>
-        <Card style={[styles.cardContainer,  Platform.OS === 'web' && { width: 600 },]}>
+      <View style={styles.container}>
+        <Card style={[styles.cardContainer, Platform.OS === 'web' && { width: 600 }]}>
           <Card.Content>
-            <Text
-              variant="titleLarge"
-              style={{ alignSelf: "center", fontWeight: "bold" }}
-            >
+            <Text variant="titleLarge" style={styles.title}>
               Login
             </Text>
 
@@ -61,18 +56,13 @@ const Login = () => {
                 style={styles.formInput}
                 label="Name Or Email"
                 value={formData.nameOrEmail}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, nameOrEmail: text })
-                }
+                onChangeText={(text) => setFormData({ ...formData, nameOrEmail: text })}
               />
               <TextInput
-              
                 style={styles.formInput}
                 label="Password"
                 value={formData.password}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, password: text })
-                }
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
                 secureTextEntry
               />
 
@@ -81,19 +71,13 @@ const Login = () => {
                 icon="forward"
                 mode="contained"
                 onPress={loginHandler}
+                loading={loading}
               >
                 Login
               </Button>
             </View>
             <Pressable onPress={() => navigation.navigate("register")}>
-              <Text
-                style={{
-                  color: "#92b6f0",
-                  textAlign: "center",
-                  width: "100%",
-                  marginTop: 10,
-                }}
-              >
+              <Text style={styles.registerText}>
                 New To Here? Register
               </Text>
             </Pressable>
@@ -114,11 +98,21 @@ const styles = StyleSheet.create({
     width: "85%",
     paddingVertical: 10,
   },
+  title: {
+    alignSelf: "center",
+    fontWeight: "bold",
+  },
   formContainer: {
     marginTop: 30,
   },
   formInput: {
     marginVertical: 17,
+  },
+  registerText: {
+    color: "#92b6f0",
+    textAlign: "center",
+    width: "100%",
+    marginTop: 10,
   },
 });
 

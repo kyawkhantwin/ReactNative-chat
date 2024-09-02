@@ -16,7 +16,7 @@ const Home = () => {
 
   const fetchUsers = useCallback(async () => {
     if (!tokenInitialized) return;
-    
+
     try {
       const { data } = await axios.get(URL, {
         params: { userId },
@@ -34,39 +34,44 @@ const Home = () => {
     }
   }, [tokenInitialized, userId, token, updateUserLists]);
 
-  const handleAddFriend = useCallback((data) => {
-    updateUserLists((prevUsers) => 
-      prevUsers.filter((user) => user._id !== data._id)
-    );
-  }, [updateUserLists]);
-
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   useEffect(() => {
+    const handleAddFriend = (data) => {
+      updateUserLists((prevUsers) =>
+        prevUsers.filter((user) => user._id !== data._id)
+      );
+    };
+
+    const handleCancelFriendReq = (data) => {
+      updateUserLists((prev) => [...prev, data]);
+    };
+
     if (socket) {
       socket.on('addFriend', handleAddFriend);
+      socket.on('cancelFriendReq', handleCancelFriendReq);
 
       return () => {
         socket.off('addFriend', handleAddFriend);
+        socket.off('cancelFriendReq', handleCancelFriendReq);
       };
     }
-  }, [socket, handleAddFriend]);
+  }, [socket, updateUserLists]);
 
   if (loading) {
     return (
       <CenteredSafeAreaView style={styles.centered}>
-        <ActivityIndicator animating={true} size="large" color="#0000ff" />
+        <ActivityIndicator animating={true} size="large" />
       </CenteredSafeAreaView>
     );
   }
 
   const renderUserCard = ({ item }) => {
-    return (
-      <UserCard user={item} title="Add" />
-    );
+    return <UserCard user={item} title="Add" />;
   };
+
   return (
     <CenteredSafeAreaView>
       <Text style={styles.header}>Add Friend</Text>
@@ -74,7 +79,7 @@ const Home = () => {
         showsVerticalScrollIndicator={false}
         data={userLists}
         renderItem={renderUserCard}
-        keyExtractor={(user) => user.id}
+        keyExtractor={(user) => user._id} 
         contentContainerStyle={Platform.OS === "web" && styles.webListContainer}
       />
     </CenteredSafeAreaView>
@@ -100,7 +105,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height:'100%'
+    height: '100%',
   },
 });
 

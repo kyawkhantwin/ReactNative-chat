@@ -15,15 +15,23 @@ const RequestFriend = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on("addFriend", (data) => {
-        setFriendRequests((prev) => [...prev, data]);
-      });
 
-      socket.on("acceptFriend", (data) => {
+      const handleAcceptFriend = (data) => {
         updateUserSentFriendRequest((prev) =>
           prev.filter((prev) => prev._id !== data._id)
-        );
-      });
+        );}
+
+        const handleAddFriend = (data) => {
+          setFriendRequests((prev) => [...prev, data]);
+        }
+      
+
+
+      socket.on("addFriend",handleAddFriend );
+
+      socket.on("acceptFriend",handleAcceptFriend );
+
+      
     }
     return () => {
       if (socket) {

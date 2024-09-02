@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Pressable, Platform, Alert } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
@@ -13,32 +13,32 @@ const Register = () => {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const registerHandler = () => {
+  const registerHandler = async () => {
     if (!formData.name || !formData.email || !formData.password) {
-      return alert("Please fill all the fields");
+      return Alert.alert("Error", "Please fill all the fields");
     }
-    axios
-      .post(URL + "register", formData)
-      .then(({ data }) => {
-        router.push('/login')
-      })
-      .catch((error) => {
-        Toast.error(error?.responser?.data?.message || "Failed to register");
-      });
+
+    setLoading(true);
+
+    try {
+      await axios.post(URL + "register", formData);
+      router.push('/login');
+    } catch (error) {
+      console.log(error);
+      Toast.error(error?.response?.data?.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
-
-      <Card style={[styles.cardContainer,  Platform.OS === 'web' && { width: 600 },]}>
-
+        <Card style={[styles.cardContainer, Platform.OS === 'web' && { width: 600 }]}>
           <Card.Content>
-            <Text
-              variant="titleLarge"
-              style={{ alignSelf: "center", fontWeight: "bold" }}
-            >
+            <Text variant="titleLarge" style={styles.title}>
               Register
             </Text>
 
@@ -48,25 +48,19 @@ const Register = () => {
                 style={styles.formInput}
                 label="Name"
                 value={formData.name}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, name: text })
-                }
+                onChangeText={(text) => setFormData({ ...formData, name: text })}
               />
               <TextInput
                 style={styles.formInput}
                 label="Email"
                 value={formData.email}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, email: text })
-                }
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
               />
               <TextInput
                 style={styles.formInput}
                 label="Password"
                 value={formData.password}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, password: text })
-                }
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
                 secureTextEntry
               />
 
@@ -75,19 +69,13 @@ const Register = () => {
                 icon="forward"
                 mode="contained"
                 onPress={registerHandler}
+                loading={loading}
               >
                 Register
               </Button>
             </View>
             <Pressable onPress={() => router.push("/login")}>
-              <Text
-                style={{
-                  color: "#92b6f0",
-                  textAlign: "center",
-                  width: "100%",
-                  marginTop: 10,
-                }}
-              >
+              <Text style={styles.loginText}>
                 Already Have An Account? Login
               </Text>
             </Pressable>
@@ -108,12 +96,21 @@ const styles = StyleSheet.create({
     width: "85%",
     paddingVertical: 10,
   },
+  title: {
+    alignSelf: "center",
+    fontWeight: "bold",
+  },
   formContainer: {
     marginTop: 30,
   },
-
   formInput: {
     marginVertical: 10,
+  },
+  loginText: {
+    color: "#92b6f0",
+    textAlign: "center",
+    width: "100%",
+    marginTop: 10,
   },
 });
 

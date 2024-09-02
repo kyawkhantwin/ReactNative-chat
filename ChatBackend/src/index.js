@@ -89,6 +89,13 @@ mongoose
         io.to(receiverSocketId).emit("addFriend", addedUser); 
       }
     })
+
+    socket.on('cancelFriendReq',async (data) =>{
+      const receiverSocketId = users[data.friendId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("cancelFriendReq", cancelUser); 
+      }
+    })
   
     socket.on("message", (data) => {
       const { receiver } = data;
