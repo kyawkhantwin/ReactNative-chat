@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {jwtDecode} from "jwt-decode";
 import { io } from "socket.io-client";
 
-export const URL = "http://3.88.234.95:8080/";
+export const URL = "http://13.250.32.148:8080/";
 
 export let userId;
 export const socket = io(URL);
