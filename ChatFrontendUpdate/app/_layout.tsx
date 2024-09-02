@@ -8,9 +8,8 @@ import merge from "deepmerge";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import "react-native-reanimated";
-
 import {
   adaptNavigationTheme,
   MD3DarkTheme,
@@ -20,7 +19,7 @@ import {
 import { AppProvider, useAppContext } from "@/utilities/useAppContext";
 import ToastManager, { Toast } from "toastify-react-native";
 import { AuthProvider, useAuth } from "@/utilities/AuthContext";
-import { socket, userId } from "@/utilities/Config";
+import { socket } from "@/utilities/Config";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,19 +34,28 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  // Handle socket events with cleanup
+  useEffect(() => {
+    if (socket) {
+      const handleConnect = () => {};
+      const handleDisconnect = () => {
+        Toast.error("Disconnected");
+      };
+
+      socket.on("connect", handleConnect);
+      socket.on("disconnect", handleDisconnect);
+
+      return () => {
+        socket.off("connect", handleConnect);
+        socket.off("disconnect", handleDisconnect);
+      };
+    }
+  }, []);
+
   if (!loaded) {
     return null;
   }
 
-  useEffect(() => {
-    if (socket) {
-      socket.on("connect", () => {});
-      socket.on("disconnect", () => {
-        Toast.error("Disconnected");
-      });
-    }
-
-  },[])
   return (
     <AppProvider>
       <AuthProvider>
@@ -80,12 +88,15 @@ const Layout = () => {
         value={theme === "dark" ? CombinedDarkTheme : CombinedDefaultTheme}
       >
         <ToastManager />
-        <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(app)" : "(auth)"}>
-          {isAuthenticated ?
-            (<Stack.Screen name="(app)" options={{ headerShown: false }} />)
-            :
-            (<Stack.Screen name="(auth)" options={{ headerShown: false }} />)
-          }
+        <Stack
+          screenOptions={{ headerShown: false }}
+          initialRouteName={isAuthenticated ? "(app)" : "(auth)"}
+        >
+          {isAuthenticated ? (
+            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          ) : (
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          )}
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
