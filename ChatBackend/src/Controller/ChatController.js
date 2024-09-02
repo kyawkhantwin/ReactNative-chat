@@ -50,4 +50,24 @@ const getMessage = async (req, res) => {
   }
 };
 
-module.exports = { sendMessage, getMessage };
+const getLastMessage = async (req, res) => {
+  try {
+    const { sender, receiver } = req.query;
+
+    const messages = await Chat.find({
+      $or: [
+        { sender: sender, receiver: receiver },
+        { sender: receiver, receiver: sender },
+      ],
+    })
+    .sort({ createdAt: -1 }) 
+    .limit(1); 
+    res.status(200).json({ message: "Latest Message", data: messages[0] });
+  } catch (error) {
+    console.error("Error fetching the latest message:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports = { sendMessage, getMessage,getLastMessage };
