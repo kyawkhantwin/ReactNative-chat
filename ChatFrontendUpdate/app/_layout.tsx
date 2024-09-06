@@ -19,7 +19,7 @@ import {
 import { AppProvider, useAppContext } from "@/utilities/useAppContext";
 import ToastManager, { Toast } from "toastify-react-native";
 import { AuthProvider, useAuth } from "@/utilities/AuthContext";
-import { socket } from "@/utilities/Config";
+import { socket, token } from "@/utilities/Config";
 
 SplashScreen.preventAutoHideAsync();
 

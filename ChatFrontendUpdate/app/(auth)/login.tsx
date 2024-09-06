@@ -34,7 +34,6 @@ const Login = () => {
       setIsAuthenticated(true);
       setTokenInitialized(true);
     } catch (err) {
-      console.log(err);
       Alert.alert("Error", err?.response?.data?.message || "Error Logging In");
     } finally {
       setLoading(false);
