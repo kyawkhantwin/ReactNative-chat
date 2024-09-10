@@ -15,7 +15,7 @@ const CenteredSafeAreaView: React.FC<CenteredSafeAreaViewProps> = ({ children, s
   const responsiveWidth = isLargeScreen ? "80%" : "100%";
 
   return (
-    <SafeAreaView style={[styles.container, Platform.OS !== "web" && styles.marginBottom]}>
+    <SafeAreaView style={[styles.container]}>
       <View style={[styles.content, { width: responsiveWidth }, style]}>
         {children}
       </View>
@@ -31,11 +31,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     width: "100%",
-    minHeight: "100%",
+    minHeight: "96%",
   },
-  marginBottom: {
-    marginBottom: 100,
-  },
+  
 });
 
 export default CenteredSafeAreaView;
