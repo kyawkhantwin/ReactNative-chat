@@ -71,7 +71,7 @@ const Chat = () => {
         style={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        <CenteredSafeAreaView style={{marginBottom: 40,}}>
+        <CenteredSafeAreaView >
           <GetOldMessage
             oldContents={oldContents}
             addContent={addContent}

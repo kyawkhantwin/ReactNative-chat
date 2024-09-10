@@ -73,7 +73,8 @@ const Home = () => {
   };
 
   return (
-    <CenteredSafeAreaView style={{marginBottom:40}}>
+    <CenteredSafeAreaView >
+
       <Text style={styles.header}>Add Friend</Text>
       <FlatList
         showsVerticalScrollIndicator={false}
