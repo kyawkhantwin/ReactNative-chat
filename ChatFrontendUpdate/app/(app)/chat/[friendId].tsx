@@ -66,11 +66,12 @@ const Chat = () => {
         <Appbar.Action icon="information-outline" onPress={() => {}} />
       </Appbar.Header>
       <ScrollView
+      
         ref={scrollViewRef}
         style={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        <CenteredSafeAreaView>
+        <CenteredSafeAreaView style={{marginBottom: 40,}}>
           <GetOldMessage
             oldContents={oldContents}
             addContent={addContent}
